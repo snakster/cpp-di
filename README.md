@@ -51,7 +51,6 @@ class ConsolePrinterImpl : public Printer
 ```C++
 class FilePrinterImpl : public Printer
 {
-public:
   FilePrinterImpl(std::string_view fn) { f.open(fn); }
   ~FilePrinterImpl() { f.close(); }
   
@@ -60,7 +59,6 @@ public:
     f << text << std::endl;
   }
   
-private:
   std::ofstream f;
 };
 ```
