@@ -51,7 +51,7 @@ class ConsolePrinterImpl : public Printer
 ```C++
 class FilePrinterImpl : public Printer
 {
-  FilePrinterImpl(std::string_view fn) { f.open(fn); }
+  FilePrinterImpl(std::string_view fn) { f.open(std::string(fn)); }
   ~FilePrinterImpl() { f.close(); }
   
   void print(std::string_view text) override
