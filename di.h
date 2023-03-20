@@ -7,6 +7,7 @@
 #include <stdexcept>
 #include <unordered_map>
 #include <typeindex>
+#include <tuple>
 
 
 namespace di {
@@ -77,15 +78,17 @@ struct ImplData
 class BindingsState
 {
 public:
-    template <typename TInterface, typename TImpl>
-    void setBinding()
+    template <typename TInterface, typename TImpl, typename ... TArgs>
+    void setService(TArgs&& ... args)
     {
         auto interfaceType = std::type_index(typeid(TInterface));
         auto implType = std::type_index(typeid(TImpl));
 
         ImplData impl;
-        impl.factory = [] () -> std::shared_ptr<void> {
-            return std::make_shared<TImpl>();
+        impl.factory = [storedArgs = std::make_tuple(std::forward<TArgs>(args) ...)] () -> std::shared_ptr<void> {
+            return std::apply([](const auto& ... args){
+                return std::make_shared<TImpl>(args ...);
+            }, storedArgs);
         };
 
         interfaceMap_[interfaceType][implType] = std::move(impl);
@@ -212,10 +215,10 @@ namespace di {
 class Bindings
 {
 public:
-    template <typename TInterface, typename TImpl>
-    Bindings& set()
+    template <typename TInterface, typename TImpl, typename ... TArgs>
+    Bindings& service(TArgs&& ... args)
     {
-        state_.setBinding<TInterface, TImpl>();
+        state_.setService<TInterface, TImpl>(std::forward<TArgs>(args) ...);
         return *this;
     }
 
