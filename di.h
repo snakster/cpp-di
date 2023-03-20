@@ -127,7 +127,7 @@ public:
         // Create non-cached instance.
         if constexpr (std::is_same_v<Tag, tags::Unique>)
         {
-            return serviceEntry->second.factory();
+            return std::static_pointer_cast<TInterface>(serviceEntry->second.factory());
         }
         
         auto instanceType = std::type_index{typeid(TaggedType<Tag, TInterface>)};
