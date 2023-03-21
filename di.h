@@ -23,8 +23,8 @@ namespace di::detail {
 class BindingsState;
 class ScopeState;
 
-/// Helper class used to keep track of constructor call stack in the current scope.
-/// If the same instance occurs more than once there's a cycle.
+/// Helper class used to keep track of nested service construction in the current scope.
+/// If an instance is constructed more than once within the same call stack, there's a cycle.
 class CycleChecker
 {
 public:
@@ -125,7 +125,7 @@ public:
             throw std::runtime_error("service interface is not bound");
 
         // Create non-cached instance.
-        if constexpr (std::is_same_v<Tag, tags::Unique>)
+        if constexpr (std::is_same_v<Tag, tags::Exclusive>)
         {
             return std::static_pointer_cast<TInterface>(serviceEntry->second.factory());
         }
@@ -212,6 +212,7 @@ std::shared_ptr<TInterface> getService()
 
 namespace di {
 
+/// Bindings define which implementation and arguments to use when instantiating an interface.
 class Bindings
 {
 public:
@@ -229,6 +230,10 @@ private:
 };
 
 
+/// Scope selects the bindings to be used in the current execution scope.
+///
+/// For the duration of its lifetime, the Scope instance is added to the global stack of active scopes.
+/// Scopes must be destroyed in the inverse order of their creation, otherwise a runtime error is thrown.
 class Scope
 {
 public:
@@ -258,10 +263,25 @@ private:
 
 namespace tags
 {
-    struct Unique {};
+    struct Exclusive {};
     struct Shared {};
 }
 
+/// A ServiceRef obtains a service instance of the given interface type.
+///
+/// The bindings of the top-most active scope are used to select an implementation.
+/// If no implementation is bound, a runtime error is thrown.
+///
+/// Depending on the Tag template parameter, the instance may be cached and shared within
+/// the active scope.
+///
+/// If tagged with tags::Unique, a new instance is created exclusively for this ServiceRef.
+///
+/// Otherwise, the tag type denotes the name under which the instance is shared.
+/// A shared instance is created on first reference, then cached and re-used on further ones.
+/// Once created, it remains cached until its active scope is destroyed.
+/// By default, ServiceRefs are shared under the name tags::Shared; user-defined tags can be used as well.
+/// Dependencies between shared instances must not result in cycles, otherwise a runtime error is thrown.
 template <typename TInterface, typename Tag = tags::Shared>
 class ServiceRef
 {
