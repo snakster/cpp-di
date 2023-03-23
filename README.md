@@ -4,7 +4,7 @@ A minimalistic C++17 dependency injection framework.
 ## Motivation
 
 A key characteristic of software is that it needs to be changed over time as requirements evolve.
-By de-coupling different parts of a program from each other, we can reduce the effort that comes with such changes. The resuling architecture this often looks like this:
+By de-coupling different parts of a program from each other, we can reduce the effort that comes with such changes. The resuling architecture often looks like this:
 * The program is divided into components.
 * Component interface and implementation are separate.
 * Dependencies between components are against interfaces, not implementations.
